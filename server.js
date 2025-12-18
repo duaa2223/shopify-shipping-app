@@ -279,7 +279,7 @@ const shippingRates = {
   'AE': { price: 10, name: 'United Arab Emirates' },
   'SA': { price: 15, name: 'Saudi Arabia' },
   'KW': { price: 11, name: 'Kuwait' },
-  'JO': { price: 12, name: 'Jordan' },
+  'JO': { price: 15, name: 'Jordan' },
   'PS': { price: 12, name: 'Palestine' },
   'QA': { price: 11, name: 'Qatar' },
   'BH': { price: 10, name: 'Bahrain' },
