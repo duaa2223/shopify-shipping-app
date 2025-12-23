@@ -1,0 +1,269 @@
+{
+  "countries": {
+    "AE": {
+      "name": "United Arab Emirates",
+      "nameAr": "الإمارات العربية المتحدة",
+      "basePrice": 10,
+      "pricePerHalfKg": 2,
+      "days": "2-4"
+    },
+    "SA": {
+      "name": "Saudi Arabia",
+      "nameAr": "السعودية",
+      "basePrice": 15,
+      "pricePerHalfKg": 3,
+      "days": "3-5"
+    },
+    "QA": {
+      "name": "Qatar",
+      "nameAr": "قطر",
+      "basePrice": 11,
+      "pricePerHalfKg": 2,
+      "days": "2-3"
+    },
+    "BH": {
+      "name": "Bahrain",
+      "nameAr": "البحرين",
+      "basePrice": 10,
+      "pricePerHalfKg": 2,
+      "days": "2-3"
+    },
+    "OM": {
+      "name": "Oman",
+      "nameAr": "عُمان",
+      "basePrice": 13,
+      "pricePerHalfKg": 2.5,
+      "days": "3-4"
+    },
+    "KW": {
+      "name": "Kuwait",
+      "nameAr": "الكويت",
+      "basePrice": 11,
+      "pricePerHalfKg": 2,
+      "days": "2-3"
+    },
+    "JO": {
+      "name": "Jordan",
+      "nameAr": "الأردن",
+      "basePrice": 15,
+      "pricePerHalfKg": 3,
+      "days": "4-7"
+    },
+    "PS": {
+      "name": "Palestinian Territories",
+      "nameAr": "فلسطين",
+      "basePrice": 12,
+      "pricePerHalfKg": 2.5,
+      "days": "5-8"
+    },
+    "EG": {
+      "name": "Egypt",
+      "nameAr": "مصر",
+      "basePrice": 14,
+      "pricePerHalfKg": 3,
+      "days": "5-8"
+    },
+    "LB": {
+      "name": "Lebanon",
+      "nameAr": "لبنان",
+      "basePrice": 13,
+      "pricePerHalfKg": 2.5,
+      "days": "5-8"
+    },
+    "IQ": {
+      "name": "Iraq",
+      "nameAr": "العراق",
+      "basePrice": 15,
+      "pricePerHalfKg": 3,
+      "days": "5-7"
+    },
+    "YE": {
+      "name": "Yemen",
+      "nameAr": "اليمن",
+      "basePrice": 16,
+      "pricePerHalfKg": 3.5,
+      "days": "7-14"
+    },
+    "SY": {
+      "name": "Syria",
+      "nameAr": "سوريا",
+      "basePrice": 14,
+      "pricePerHalfKg": 3,
+      "days": "7-12"
+    },
+    "LY": {
+      "name": "Libya",
+      "nameAr": "ليبيا",
+      "basePrice": 15,
+      "pricePerHalfKg": 3.5,
+      "days": "7-12"
+    },
+    "SD": {
+      "name": "Sudan",
+      "nameAr": "السودان",
+      "basePrice": 16,
+      "pricePerHalfKg": 3.5,
+      "days": "7-14"
+    },
+    "TN": {
+      "name": "Tunisia",
+      "nameAr": "تونس",
+      "basePrice": 15,
+      "pricePerHalfKg": 3.5,
+      "days": "7-10"
+    },
+    "DZ": {
+      "name": "Algeria",
+      "nameAr": "الجزائر",
+      "basePrice": 16,
+      "pricePerHalfKg": 3.5,
+      "days": "7-10"
+    },
+    "MA": {
+      "name": "Morocco",
+      "nameAr": "المغرب",
+      "basePrice": 16,
+      "pricePerHalfKg": 3.5,
+      "days": "7-10"
+    },
+    "MR": {
+      "name": "Mauritania",
+      "nameAr": "موريتانيا",
+      "basePrice": 17,
+      "pricePerHalfKg": 4,
+      "days": "7-12"
+    },
+    "SO": {
+      "name": "Somalia",
+      "nameAr": "الصومال",
+      "basePrice": 18,
+      "pricePerHalfKg": 4,
+      "days": "7-14"
+    },
+    "DJ": {
+      "name": "Djibouti",
+      "nameAr": "جيبوتي",
+      "basePrice": 17,
+      "pricePerHalfKg": 4,
+      "days": "7-14"
+    },
+    "KM": {
+      "name": "Comoros",
+      "nameAr": "جزر القمر",
+      "basePrice": 18,
+      "pricePerHalfKg": 4,
+      "days": "7-14"
+    },
+    "TR": {
+      "name": "Türkiye",
+      "nameAr": "تركيا",
+      "basePrice": 14,
+      "pricePerHalfKg": 3,
+      "days": "5-10"
+    },
+    "IL": {
+      "name": "Israel",
+      "nameAr": "إسرائيل",
+      "basePrice": 18,
+      "pricePerHalfKg": 3.5,
+      "days": "5-8"
+    },
+    "IR": {
+      "name": "Iran",
+      "nameAr": "إيران",
+      "basePrice": 15,
+      "pricePerHalfKg": 3,
+      "days": "5-10"
+    },
+    "PK": {
+      "name": "Pakistan",
+      "nameAr": "باكستان",
+      "basePrice": 14,
+      "pricePerHalfKg": 3,
+      "days": "5-10"
+    },
+    "GB": {
+      "name": "United Kingdom",
+      "nameAr": "بريطانيا",
+      "basePrice": 25,
+      "pricePerHalfKg": 5,
+      "days": "5-8"
+    },
+    "FR": {
+      "name": "France",
+      "nameAr": "فرنسا",
+      "basePrice": 25,
+      "pricePerHalfKg": 5,
+      "days": "5-8"
+    },
+    "NL": {
+      "name": "Netherlands",
+      "nameAr": "هولندا",
+      "basePrice": 25,
+      "pricePerHalfKg": 5,
+      "days": "5-8"
+    },
+    "DE": {
+      "name": "Germany",
+      "nameAr": "ألمانيا",
+      "basePrice": 25,
+      "pricePerHalfKg": 5,
+      "days": "5-8"
+    },
+    "IT": {
+      "name": "Italy",
+      "nameAr": "إيطاليا",
+      "basePrice": 25,
+      "pricePerHalfKg": 5,
+      "days": "5-8"
+    },
+    "ES": {
+      "name": "Spain",
+      "nameAr": "إسبانيا",
+      "basePrice": 25,
+      "pricePerHalfKg": 5,
+      "days": "5-8"
+    },
+    "CH": {
+      "name": "Switzerland",
+      "nameAr": "سويسرا",
+      "basePrice": 28,
+      "pricePerHalfKg": 5.5,
+      "days": "5-8"
+    },
+    "US": {
+      "name": "United States",
+      "nameAr": "أمريكا",
+      "basePrice": 30,
+      "pricePerHalfKg": 6,
+      "days": "7-14"
+    },
+    "CA": {
+      "name": "Canada",
+      "nameAr": "كندا",
+      "basePrice": 30,
+      "pricePerHalfKg": 6,
+      "days": "7-14"
+    }
+  },
+  "serviceTypes": {
+    "standard": {
+      "name": "Standard Shipping",
+      "nameAr": "شحن قياسي",
+      "multiplier": 1.0,
+      "code": "STD"
+    },
+    "economy": {
+      "name": "Economy Shipping",
+      "nameAr": "شحن اقتصادي",
+      "multiplier": 0.8,
+      "code": "ECO"
+    },
+    "premium": {
+      "name": "Premium Shipping",
+      "nameAr": "شحن سريع",
+      "multiplier": 1.5,
+      "code": "PRM"
+    }
+  }
+}

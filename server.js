@@ -699,6 +699,8 @@
 // module.exports = app;
 //////////////////////////////////////////////////////////////////////////////
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const app = express();
 
 const PORT = process.env.PORT || 3000;
@@ -718,244 +720,18 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ هيكل التسعير الجديد - سهل التعديل
-const shippingConfig = {
-  // الدول مع أسعارها
-  countries: {
-    'AE': {
-      name: 'United Arab Emirates',
-      nameAr: 'الإمارات',
-      basePrice: 10,
-      pricePerHalfKg: 2,
-      days: '2-4'
-    },
-    'JO': {
-      name: 'Jordan',
-      nameAr: 'الأردن',
-      basePrice: 15,
-      pricePerHalfKg: 3,
-      days: '4-7'
-    },
-    'PS': {
-      name: 'Palestine',
-      nameAr: 'فلسطين',
-      basePrice: 12,
-      pricePerHalfKg: 2.5,
-      days: '5-8'
-    },
-    'QA': {
-      name: 'Qatar',
-      nameAr: 'قطر',
-      basePrice: 11,           // السعر الأساسي للنصف كيلو الأول
-      pricePerHalfKg: 2,       // سعر كل 0.5 كجم إضافي
-      days: '2-3'
-    },
-    'BH': {
-      name: 'Bahrain',
-      nameAr: 'البحرين',
-      basePrice: 10,
-      pricePerHalfKg: 2,
-      days: '2-3'
-    },
-    'OM': {
-      name: 'Oman',
-      nameAr: 'عُمان',
-      basePrice: 13,
-      pricePerHalfKg: 2.5,
-      days: '3-4'
-    },
-    'KW': {
-      name: 'Kuwait',
-      nameAr: 'الكويت',
-      basePrice: 11,
-      pricePerHalfKg: 2,
-      days: '2-3'
-    },
-    'IQ': {
-      name: 'Iraq',
-      nameAr: 'العراق',
-      basePrice: 15,
-      pricePerHalfKg: 3,
-      days: '5-7'
-    },
-    'TN': {
-      name: 'Tunisia',
-      nameAr: 'تونس',
-      basePrice: 20,
-      pricePerHalfKg: 4,
-      days: '7-10'
-    },
-    'DZ': {
-      name: 'Algeria',
-      nameAr: 'الجزائر',
-      basePrice: 16,
-      pricePerHalfKg: 3.5,
-      days: '7-10'
-    },
-    'MA': {
-      name: 'Morocco',
-      nameAr: 'المغرب',
-      basePrice: 16,
-      pricePerHalfKg: 3.5,
-      days: '7-10'
-    },
-    'MR': {
-      name: 'Mauritania',
-      nameAr: 'موريتانيا',
-      basePrice: 17,
-      pricePerHalfKg: 4,
-      days: '7-12'
-    },
-    'SO': {
-      name: 'Somalia',
-      nameAr: 'الصومال',
-      basePrice: 18,
-      pricePerHalfKg: 4,
-      days: '7-14'
-    },
-    'DJ': {
-      name: 'Djibouti',
-      nameAr: 'جيبوتي',
-      basePrice: 17,
-      pricePerHalfKg: 4,
-      days: '7-14'
-    },
-    'KM': {
-      name: 'Comoros',
-      nameAr: 'جزر القمر',
-      basePrice: 18,
-      pricePerHalfKg: 4,
-      days: '7-14'
-    },
-    'TR': {
-      name: 'Turkey',
-      nameAr: 'تركيا',
-      basePrice: 14,
-      pricePerHalfKg: 3,
-      days: '5-10'
-    },
-    'IR': {
-      name: 'Iran',
-      nameAr: 'إيران',
-      basePrice: 15,
-      pricePerHalfKg: 3,
-      days: '5-10'
-    },
-    'PK': {
-      name: 'Pakistan',
-      nameAr: 'باكستان',
-      basePrice: 14,
-      pricePerHalfKg: 3,
-      days: '5-10'
-    },
-    'GB': {
-      name: 'United Kingdom',
-      nameAr: 'بريطانيا',
-      basePrice: 25,
-      pricePerHalfKg: 5,
-      days: '5-8'
-    },
-    'FR': {
-      name: 'France',
-      nameAr: 'فرنسا',
-      basePrice: 25,
-      pricePerHalfKg: 5,
-      days: '5-8'
-    },
-    'NL': {
-      name: 'Netherlands',
-      nameAr: 'هولندا',
-      basePrice: 25,
-      pricePerHalfKg: 5,
-      days: '5-8'
-    },
-    'DE': {
-      name: 'Germany',
-      nameAr: 'ألمانيا',
-      basePrice: 25,
-      pricePerHalfKg: 5,
-      days: '5-8'
-    },
-    'IT': {
-      name: 'Italy',
-      nameAr: 'إيطاليا',
-      basePrice: 25,
-      pricePerHalfKg: 5,
-      days: '5-8'
-    },
-    'SA': {
-      name: 'Saudi Arabia',
-      nameAr: 'السعودية',
-      basePrice: 15,
-      pricePerHalfKg: 3,
-      days: '3-5'
-    },
-    'SD': {
-      name: 'Sudan',
-      nameAr: 'السودان',
-      basePrice: 20,
-      pricePerHalfKg: 4,
-      days: '7-12'
-    },
-    'US': {
-      name: 'United States',
-      nameAr: 'أمريكا',
-      basePrice: 30,
-      pricePerHalfKg: 6,
-      days: '7-14'
-    },
-    'CA': {
-      name: 'Canada',
-      nameAr: 'كندا',
-      basePrice: 30,
-      pricePerHalfKg: 6,
-      days: '7-14'
-    },
-    'MR': {
-      name: 'Mauritania',
-      nameAr: 'موريتانيا',
-      basePrice: 22,
-      pricePerHalfKg: 4.5,
-      days: '7-12'
-    },
-    'CH': {
-      name: 'Switzerland',
-      nameAr: 'سويسرا',
-      basePrice: 28,
-      pricePerHalfKg: 5.5,
-      days: '5-8'
-    },
-    'ES': {
-      name: 'Spain',
-      nameAr: 'إسبانيا',
-      basePrice: 25,
-      pricePerHalfKg: 5,
-      days: '5-8'
-    }
-  },
-
-  // ✅ أنواع الخدمات - سهل التعديل
-  serviceTypes: {
-    'standard': {
-      name: 'Standard Shipping',
-      nameAr: 'شحن قياسي',
-      multiplier: 1.0,        // السعر الأساسي
-      code: 'STD'
-    },
-    'economy': {
-      name: 'Economy Shipping',
-      nameAr: 'شحن اقتصادي',
-      multiplier: 0.8,        // تخفيض 20%
-      code: 'ECO'
-    },
-    'premium': {
-      name: 'Premium Shipping',
-      nameAr: 'شحن سريع',
-      multiplier: 1.5,        // زيادة 50%
-      code: 'PRM'
-    }
-  }
-};
+// ✅ قراءة ملف الإعدادات
+let shippingConfig;
+try {
+  const configPath = path.join(__dirname, 'shipping-config.json');
+  const configFile = fs.readFileSync(configPath, 'utf8');
+  shippingConfig = JSON.parse(configFile);
+  console.log('✅ Shipping configuration loaded successfully');
+  console.log(`📊 Loaded ${Object.keys(shippingConfig.countries).length} countries`);
+} catch (error) {
+  console.error('❌ Error loading shipping configuration:', error);
+  process.exit(1);
+}
 
 // ✅ دالة حساب الوزن (تقريب لأقرب 0.5 كجم)
 function roundWeight(grams) {
@@ -1009,11 +785,12 @@ app.get('/', (req, res) => {
   res.status(200).json({
     status: '✅ النظام يعمل بنجاح',
     service: 'Shopify Dynamic Shipping Calculator',
-    version: '2.0.0',
+    version: '2.1.0',
     features: [
       'حساب حسب الوزن',
       'حساب حسب الدولة',
       '3 أنواع خدمات شحن',
+      'إعدادات منفصلة (JSON)',
       'سهل التعديل والتخصيص'
     ],
     supportedCountries: Object.keys(shippingConfig.countries).length,
@@ -1049,13 +826,22 @@ app.post('/shipping-rates', (req, res) => {
 
     // حساب الوزن الكلي
     const items = rate.items || [];
-    let totalWeight = items.reduce((sum, item) => 
-      sum + (item.grams * item.quantity), 0
-    );
+    console.log(`📦 Items received:`, JSON.stringify(items, null, 2));
+    
+    let totalWeight = items.reduce((sum, item) => {
+      const itemWeight = item.grams || 0;
+      const itemQuantity = item.quantity || 1;
+      console.log(`   - Item: ${item.name || 'Unknown'}, Weight: ${itemWeight}g, Qty: ${itemQuantity}`);
+      return sum + (itemWeight * itemQuantity);
+    }, 0);
+
+    console.log(`📊 Calculated total weight: ${totalWeight}g`);
 
     // ✅ إذا كان الوزن 0، استخدم وزن افتراضي (500g = 0.5kg)
     if (totalWeight === 0) {
-      console.log('⚠️ Weight is 0, using default weight: 500g');
+      console.log('⚠️ WARNING: Weight is 0! Shopify might not be sending weight data.');
+      console.log('💡 Using default weight: 500g (0.5kg)');
+      console.log('🔧 Fix: Make sure product weight is filled in Shopify product settings');
       totalWeight = 500;
     }
 
@@ -1090,6 +876,31 @@ app.post('/shipping-rates', (req, res) => {
       console.error(`❌ Failed to calculate price for ${countryCode}`);
     }
 
+    // 💡 لتفعيل Economy و Premium، أزل التعليق عن هذا القسم:
+    /*
+    const economyCalc = calculatePrice(countryCode, totalWeight, 'economy');
+    if (economyCalc) {
+      rates.push({
+        service_name: `Economy Shipping to ${economyCalc.country}`,
+        service_code: `ECO_${countryCode}`,
+        total_price: economyCalc.priceInCents.toString(),
+        currency: currency,
+        description: `Delivery in ${economyCalc.deliveryDays} business days (${economyCalc.weightInKg}kg)`
+      });
+    }
+
+    const premiumCalc = calculatePrice(countryCode, totalWeight, 'premium');
+    if (premiumCalc) {
+      rates.push({
+        service_name: `Premium Shipping to ${premiumCalc.country}`,
+        service_code: `PRM_${countryCode}`,
+        total_price: premiumCalc.priceInCents.toString(),
+        currency: currency,
+        description: `Express delivery in ${premiumCalc.deliveryDays} business days (${premiumCalc.weightInKg}kg)`
+      });
+    }
+    */
+
     console.log(`✅ Calculated ${rates.length} rate(s)`);
     console.log('📤 Response:', JSON.stringify({ rates }, null, 2));
     console.log('==============================\n');
@@ -1100,6 +911,7 @@ app.post('/shipping-rates', (req, res) => {
 
   } catch (error) {
     console.error('❌ Error:', error);
+    console.error('Stack:', error.stack);
     return res.status(200).json({ rates: [] });
   }
 });
@@ -1224,6 +1036,28 @@ app.get('/test/:countryCode', (req, res) => {
   });
 });
 
+// ✅ إعادة تحميل الإعدادات (للتطوير فقط)
+app.post('/reload-config', (req, res) => {
+  try {
+    const configPath = path.join(__dirname, 'shipping-config.json');
+    delete require.cache[require.resolve(configPath)];
+    const configFile = fs.readFileSync(configPath, 'utf8');
+    shippingConfig = JSON.parse(configFile);
+    
+    res.json({
+      success: true,
+      message: 'Configuration reloaded successfully',
+      countries: Object.keys(shippingConfig.countries).length,
+      services: Object.keys(shippingConfig.serviceTypes).length
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: error.message
+    });
+  }
+});
+
 // ✅ 404 Handler
 app.use((req, res) => {
   res.status(404).json({
@@ -1235,7 +1069,8 @@ app.use((req, res) => {
       'GET /calculate?country=QA&weight=2000&service=standard',
       'GET /countries?weight=1000&service=standard',
       'GET /services',
-      'GET /test/:countryCode'
+      'GET /test/:countryCode',
+      'POST /reload-config'
     ]
   });
 });
@@ -1259,12 +1094,24 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('\n📊 Configuration:');
   console.log(`   🌍 Countries: ${Object.keys(shippingConfig.countries).length}`);
   console.log(`   📦 Services: ${Object.keys(shippingConfig.serviceTypes).length}`);
+  console.log('\n📋 Supported Countries:');
+  Object.entries(shippingConfig.countries).forEach(([code, country]) => {
+    console.log(`   ${code}: ${country.name} (${country.nameAr})`);
+  });
   console.log('\n✅ Ready!\n');
 });
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
   console.log('🛑 Shutting down gracefully...');
+  server.close(() => {
+    console.log('✅ Server closed');
+    process.exit(0);
+  });
+});
+
+process.on('SIGINT', () => {
+  console.log('🛑 SIGINT received, closing server...');
   server.close(() => {
     console.log('✅ Server closed');
     process.exit(0);
