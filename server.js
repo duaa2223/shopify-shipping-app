@@ -722,6 +722,27 @@ app.use((req, res, next) => {
 const shippingConfig = {
   // الدول مع أسعارها
   countries: {
+    'AE': {
+      name: 'United Arab Emirates',
+      nameAr: 'الإمارات',
+      basePrice: 10,
+      pricePerHalfKg: 2,
+      days: '2-4'
+    },
+    'JO': {
+      name: 'Jordan',
+      nameAr: 'الأردن',
+      basePrice: 15,
+      pricePerHalfKg: 3,
+      days: '4-7'
+    },
+    'PS': {
+      name: 'Palestine',
+      nameAr: 'فلسطين',
+      basePrice: 12,
+      pricePerHalfKg: 2.5,
+      days: '5-8'
+    },
     'QA': {
       name: 'Qatar',
       nameAr: 'قطر',
@@ -767,16 +788,65 @@ const shippingConfig = {
     'DZ': {
       name: 'Algeria',
       nameAr: 'الجزائر',
-      basePrice: 22,
-      pricePerHalfKg: 4.5,
+      basePrice: 16,
+      pricePerHalfKg: 3.5,
       days: '7-10'
     },
     'MA': {
       name: 'Morocco',
       nameAr: 'المغرب',
-      basePrice: 22,
-      pricePerHalfKg: 4.5,
+      basePrice: 16,
+      pricePerHalfKg: 3.5,
       days: '7-10'
+    },
+    'MR': {
+      name: 'Mauritania',
+      nameAr: 'موريتانيا',
+      basePrice: 17,
+      pricePerHalfKg: 4,
+      days: '7-12'
+    },
+    'SO': {
+      name: 'Somalia',
+      nameAr: 'الصومال',
+      basePrice: 18,
+      pricePerHalfKg: 4,
+      days: '7-14'
+    },
+    'DJ': {
+      name: 'Djibouti',
+      nameAr: 'جيبوتي',
+      basePrice: 17,
+      pricePerHalfKg: 4,
+      days: '7-14'
+    },
+    'KM': {
+      name: 'Comoros',
+      nameAr: 'جزر القمر',
+      basePrice: 18,
+      pricePerHalfKg: 4,
+      days: '7-14'
+    },
+    'TR': {
+      name: 'Turkey',
+      nameAr: 'تركيا',
+      basePrice: 14,
+      pricePerHalfKg: 3,
+      days: '5-10'
+    },
+    'IR': {
+      name: 'Iran',
+      nameAr: 'إيران',
+      basePrice: 15,
+      pricePerHalfKg: 3,
+      days: '5-10'
+    },
+    'PK': {
+      name: 'Pakistan',
+      nameAr: 'باكستان',
+      basePrice: 14,
+      pricePerHalfKg: 3,
+      days: '5-10'
     },
     'GB': {
       name: 'United Kingdom',
@@ -979,9 +1049,15 @@ app.post('/shipping-rates', (req, res) => {
 
     // حساب الوزن الكلي
     const items = rate.items || [];
-    const totalWeight = items.reduce((sum, item) => 
+    let totalWeight = items.reduce((sum, item) => 
       sum + (item.grams * item.quantity), 0
     );
+
+    // ✅ إذا كان الوزن 0، استخدم وزن افتراضي (500g = 0.5kg)
+    if (totalWeight === 0) {
+      console.log('⚠️ Weight is 0, using default weight: 500g');
+      totalWeight = 500;
+    }
 
     console.log(`🌍 Country: ${countryCode}`);
     console.log(`⚖️ Total Weight: ${totalWeight}g (${roundWeight(totalWeight)}kg)`);
@@ -989,6 +1065,7 @@ app.post('/shipping-rates', (req, res) => {
     // التحقق من دعم الدولة
     if (!shippingConfig.countries[countryCode]) {
       console.log(`⚠️ Country not supported: ${countryCode}`);
+      console.log(`📋 Available countries: ${Object.keys(shippingConfig.countries).join(', ')}`);
       return res.status(200).json({ rates: [] });
     }
 
@@ -999,6 +1076,9 @@ app.post('/shipping-rates', (req, res) => {
     const standardCalc = calculatePrice(countryCode, totalWeight, 'standard');
     
     if (standardCalc) {
+      console.log(`✅ Calculated price: ${standardCalc.calculatedPrice} AED (${standardCalc.priceInCents} cents)`);
+      console.log(`📊 Breakdown:`, standardCalc.breakdown);
+      
       rates.push({
         service_name: `Standard Shipping to ${standardCalc.country}`,
         service_code: `STD_${countryCode}`,
@@ -1006,35 +1086,12 @@ app.post('/shipping-rates', (req, res) => {
         currency: currency,
         description: `Delivery in ${standardCalc.deliveryDays} business days (${standardCalc.weightInKg}kg)`
       });
+    } else {
+      console.error(`❌ Failed to calculate price for ${countryCode}`);
     }
-
-    // يمكن إضافة Economy و Premium لاحقاً عند الحاجة:
-    /*
-    const economyCalc = calculatePrice(countryCode, totalWeight, 'economy');
-    if (economyCalc) {
-      rates.push({
-        service_name: `Economy Shipping to ${economyCalc.country}`,
-        service_code: `ECO_${countryCode}`,
-        total_price: economyCalc.priceInCents.toString(),
-        currency: currency,
-        description: `Delivery in ${economyCalc.deliveryDays} business days (${economyCalc.weightInKg}kg)`
-      });
-    }
-
-    const premiumCalc = calculatePrice(countryCode, totalWeight, 'premium');
-    if (premiumCalc) {
-      rates.push({
-        service_name: `Premium Shipping to ${premiumCalc.country}`,
-        service_code: `PRM_${countryCode}`,
-        total_price: premiumCalc.priceInCents.toString(),
-        currency: currency,
-        description: `Express delivery in ${premiumCalc.deliveryDays} business days (${premiumCalc.weightInKg}kg)`
-      });
-    }
-    */
 
     console.log(`✅ Calculated ${rates.length} rate(s)`);
-    console.log('Response:', JSON.stringify({ rates }, null, 2));
+    console.log('📤 Response:', JSON.stringify({ rates }, null, 2));
     console.log('==============================\n');
 
     return res.status(200)
