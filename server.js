@@ -698,6 +698,428 @@
 
 // module.exports = app;
 //////////////////////////////////////////////////////////////////////////////
+// const express = require('express');
+// const fs = require('fs');
+// const path = require('path');
+// const app = express();
+
+// const PORT = process.env.PORT || 3000;
+
+// // Middleware
+// app.use(express.json({ limit: '50mb' }));
+// app.use(express.urlencoded({ extended: true }));
+
+// // CORS
+// app.use((req, res, next) => {
+//   res.header('Access-Control-Allow-Origin', '*');
+//   res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+//   res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+//   if (req.method === 'OPTIONS') {
+//     return res.sendStatus(200);
+//   }
+//   next();
+// });
+
+// // ✅ قراءة ملف الإعدادات
+// let shippingConfig;
+// try {
+//   const configPath = path.join(__dirname, 'shipping-config.json');
+//   const configFile = fs.readFileSync(configPath, 'utf8');
+//   shippingConfig = JSON.parse(configFile);
+//   console.log('✅ Shipping configuration loaded successfully');
+//   console.log(`📊 Loaded ${Object.keys(shippingConfig.countries).length} countries`);
+// } catch (error) {
+//   console.error('❌ Error loading shipping configuration:', error);
+//   process.exit(1);
+// }
+
+// // ✅ دالة حساب الوزن (تقريب لأقرب 0.5 كجم)
+// function roundWeight(grams) {
+//   const kg = grams / 1000;
+//   return Math.ceil(kg * 2) / 2; // تقريب لأعلى 0.5
+// }
+
+// // ✅ دالة حساب السعر حسب الوزن
+// function calculatePrice(countryCode, weightInGrams, serviceType = 'standard') {
+//   const country = shippingConfig.countries[countryCode];
+//   const service = shippingConfig.serviceTypes[serviceType];
+
+//   if (!country || !service) {
+//     return null;
+//   }
+
+//   const weightInKg = roundWeight(weightInGrams);
+  
+//   // حساب عدد الأنصاف كيلوات الإضافية
+//   const extraHalfKgs = Math.max(0, (weightInKg - 0.5) * 2);
+  
+//   // السعر = السعر الأساسي + (عدد الأنصاف × سعر النصف كيلو)
+//   const baseCalculation = country.basePrice + (extraHalfKgs * country.pricePerHalfKg);
+  
+//   // تطبيق معامل نوع الخدمة
+//   const finalPrice = baseCalculation * service.multiplier;
+
+//   return {
+//     country: country.name,
+//     countryAr: country.nameAr,
+//     serviceType: service.name,
+//     serviceTypeAr: service.nameAr,
+//     weightInKg: weightInKg,
+//     basePrice: country.basePrice,
+//     pricePerHalfKg: country.pricePerHalfKg,
+//     calculatedPrice: Math.round(finalPrice * 100) / 100,
+//     priceInCents: Math.round(finalPrice * 100),
+//     deliveryDays: country.days,
+//     breakdown: {
+//       base: country.basePrice,
+//       extra: extraHalfKgs * country.pricePerHalfKg,
+//       serviceMultiplier: service.multiplier,
+//       beforeService: baseCalculation,
+//       final: finalPrice
+//     }
+//   };
+// }
+
+// // ✅ الصفحة الرئيسية
+// app.get('/', (req, res) => {
+//   res.status(200).json({
+//     status: '✅ النظام يعمل بنجاح',
+//     service: 'Shopify Dynamic Shipping Calculator',
+//     version: '2.1.0',
+//     features: [
+//       'حساب حسب الوزن',
+//       'حساب حسب الدولة',
+//       '3 أنواع خدمات شحن',
+//       'إعدادات منفصلة (JSON)',
+//       'سهل التعديل والتخصيص'
+//     ],
+//     supportedCountries: Object.keys(shippingConfig.countries).length,
+//     serviceTypes: Object.keys(shippingConfig.serviceTypes),
+//     timestamp: new Date().toISOString()
+//   });
+// });
+
+// // ✅ Health Check
+// app.get('/health', (req, res) => {
+//   res.status(200).json({
+//     status: 'healthy',
+//     uptime: Math.floor(process.uptime()),
+//     timestamp: new Date().toISOString()
+//   });
+// });
+
+// // ✅ Endpoint رئيسي لـ Shopify
+// app.post('/shipping-rates', (req, res) => {
+//   try {
+//     console.log('\n📦 ===== Shopify Request =====');
+//     console.log('Time:', new Date().toISOString());
+
+//     const { rate } = req.body;
+
+//     if (!rate || !rate.destination || !rate.destination.country) {
+//       console.error('❌ Invalid request');
+//       return res.status(200).json({ rates: [] });
+//     }
+
+//     const countryCode = rate.destination.country.toUpperCase();
+//     const currency = rate.currency || 'AED';
+
+//     // حساب الوزن الكلي
+//     const items = rate.items || [];
+//     console.log(`📦 Items received:`, JSON.stringify(items, null, 2));
+    
+//     let totalWeight = items.reduce((sum, item) => {
+//       const itemWeight = item.grams || 0;
+//       const itemQuantity = item.quantity || 1;
+//       console.log(`   - Item: ${item.name || 'Unknown'}, Weight: ${itemWeight}g, Qty: ${itemQuantity}`);
+//       return sum + (itemWeight * itemQuantity);
+//     }, 0);
+
+//     console.log(`📊 Calculated total weight: ${totalWeight}g`);
+
+//     // ✅ إذا كان الوزن 0، استخدم وزن افتراضي (500g = 0.5kg)
+//     if (totalWeight === 0) {
+//       console.log('⚠️ WARNING: Weight is 0! Shopify might not be sending weight data.');
+//       console.log('💡 Using default weight: 500g (0.5kg)');
+//       console.log('🔧 Fix: Make sure product weight is filled in Shopify product settings');
+//       totalWeight = 500;
+//     }
+
+//     console.log(`🌍 Country: ${countryCode}`);
+//     console.log(`⚖️ Total Weight: ${totalWeight}g (${roundWeight(totalWeight)}kg)`);
+
+//     // التحقق من دعم الدولة
+//     if (!shippingConfig.countries[countryCode]) {
+//       console.log(`⚠️ Country not supported: ${countryCode}`);
+//       console.log(`📋 Available countries: ${Object.keys(shippingConfig.countries).join(', ')}`);
+//       return res.status(200).json({ rates: [] });
+//     }
+
+//     // ✅ حساب الأسعار لجميع أنواع الخدمات
+//     const rates = [];
+    
+//     // حالياً نرسل Standard فقط (يمكن إضافة الباقي لاحقاً)
+//     const standardCalc = calculatePrice(countryCode, totalWeight, 'standard');
+    
+//     if (standardCalc) {
+//       console.log(`✅ Calculated price: ${standardCalc.calculatedPrice} AED (${standardCalc.priceInCents} cents)`);
+//       console.log(`📊 Breakdown:`, standardCalc.breakdown);
+      
+//       rates.push({
+//         service_name: `Standard Shipping to ${standardCalc.country}`,
+//         service_code: `STD_${countryCode}`,
+//         total_price: standardCalc.priceInCents.toString(),
+//         currency: currency,
+//         description: `Delivery in ${standardCalc.deliveryDays} business days (${standardCalc.weightInKg}kg)`
+//       });
+//     } else {
+//       console.error(`❌ Failed to calculate price for ${countryCode}`);
+//     }
+
+//     // 💡 لتفعيل Economy و Premium، أزل التعليق عن هذا القسم:
+//     /*
+//     const economyCalc = calculatePrice(countryCode, totalWeight, 'economy');
+//     if (economyCalc) {
+//       rates.push({
+//         service_name: `Economy Shipping to ${economyCalc.country}`,
+//         service_code: `ECO_${countryCode}`,
+//         total_price: economyCalc.priceInCents.toString(),
+//         currency: currency,
+//         description: `Delivery in ${economyCalc.deliveryDays} business days (${economyCalc.weightInKg}kg)`
+//       });
+//     }
+
+//     const premiumCalc = calculatePrice(countryCode, totalWeight, 'premium');
+//     if (premiumCalc) {
+//       rates.push({
+//         service_name: `Premium Shipping to ${premiumCalc.country}`,
+//         service_code: `PRM_${countryCode}`,
+//         total_price: premiumCalc.priceInCents.toString(),
+//         currency: currency,
+//         description: `Express delivery in ${premiumCalc.deliveryDays} business days (${premiumCalc.weightInKg}kg)`
+//       });
+//     }
+//     */
+
+//     console.log(`✅ Calculated ${rates.length} rate(s)`);
+//     console.log('📤 Response:', JSON.stringify({ rates }, null, 2));
+//     console.log('==============================\n');
+
+//     return res.status(200)
+//       .set('Content-Type', 'application/json')
+//       .json({ rates });
+
+//   } catch (error) {
+//     console.error('❌ Error:', error);
+//     console.error('Stack:', error.stack);
+//     return res.status(200).json({ rates: [] });
+//   }
+// });
+
+// // ✅ اختبار حساب السعر
+// app.get('/calculate', (req, res) => {
+//   const { country, weight, service } = req.query;
+
+//   if (!country || !weight) {
+//     return res.status(400).json({
+//       error: 'Missing parameters',
+//       required: 'country (code) and weight (in grams)',
+//       example: '/calculate?country=QA&weight=2500&service=standard'
+//     });
+//   }
+
+//   const result = calculatePrice(
+//     country.toUpperCase(),
+//     parseInt(weight),
+//     service || 'standard'
+//   );
+
+//   if (!result) {
+//     return res.status(404).json({
+//       error: 'Country not found or invalid service type',
+//       availableCountries: Object.keys(shippingConfig.countries),
+//       availableServices: Object.keys(shippingConfig.serviceTypes)
+//     });
+//   }
+
+//   res.json({
+//     calculation: result,
+//     formattedPrice: `${result.calculatedPrice.toFixed(2)} AED`,
+//     shopifyFormat: {
+//       service_name: `${result.serviceType} to ${result.country}`,
+//       service_code: `${shippingConfig.serviceTypes[service || 'standard'].code}_${country.toUpperCase()}`,
+//       total_price: result.priceInCents.toString(),
+//       currency: 'AED'
+//     }
+//   });
+// });
+
+// // ✅ عرض جميع الدول والأسعار
+// app.get('/countries', (req, res) => {
+//   const weight = parseInt(req.query.weight) || 500; // وزن افتراضي 0.5 كجم
+//   const service = req.query.service || 'standard';
+
+//   const countriesWithPrices = Object.entries(shippingConfig.countries).map(([code, country]) => {
+//     const calc = calculatePrice(code, weight, service);
+//     return {
+//       code,
+//       name: country.name,
+//       nameAr: country.nameAr,
+//       basePrice: country.basePrice,
+//       pricePerHalfKg: country.pricePerHalfKg,
+//       deliveryDays: country.days,
+//       examplePrice: calc ? `${calc.calculatedPrice.toFixed(2)} AED` : 'N/A'
+//     };
+//   });
+
+//   res.json({
+//     totalCountries: countriesWithPrices.length,
+//     exampleWeight: `${weight}g (${roundWeight(weight)}kg)`,
+//     serviceType: service,
+//     countries: countriesWithPrices
+//   });
+// });
+
+// // ✅ عرض أنواع الخدمات
+// app.get('/services', (req, res) => {
+//   res.json({
+//     services: Object.entries(shippingConfig.serviceTypes).map(([key, service]) => ({
+//       key,
+//       name: service.name,
+//       nameAr: service.nameAr,
+//       multiplier: service.multiplier,
+//       description: `${service.multiplier === 1 ? 'Base price' : 
+//                     service.multiplier < 1 ? `${(1 - service.multiplier) * 100}% discount` :
+//                     `${(service.multiplier - 1) * 100}% premium`}`
+//     }))
+//   });
+// });
+
+// // ✅ اختبار شامل لدولة معينة
+// app.get('/test/:countryCode', (req, res) => {
+//   const countryCode = req.params.countryCode.toUpperCase();
+//   const country = shippingConfig.countries[countryCode];
+
+//   if (!country) {
+//     return res.status(404).json({
+//       error: 'Country not found',
+//       availableCountries: Object.keys(shippingConfig.countries)
+//     });
+//   }
+
+//   // حساب أمثلة لأوزان مختلفة
+//   const weightExamples = [500, 1000, 1500, 2000, 2500, 3000, 5000];
+//   const examples = {};
+
+//   Object.keys(shippingConfig.serviceTypes).forEach(serviceType => {
+//     examples[serviceType] = weightExamples.map(weight => {
+//       const calc = calculatePrice(countryCode, weight, serviceType);
+//       return {
+//         weight: `${weight}g`,
+//         roundedWeight: `${calc.weightInKg}kg`,
+//         price: `${calc.calculatedPrice.toFixed(2)} AED`,
+//         priceInCents: calc.priceInCents
+//       };
+//     });
+//   });
+
+//   res.json({
+//     country: {
+//       code: countryCode,
+//       name: country.name,
+//       nameAr: country.nameAr,
+//       basePrice: country.basePrice,
+//       pricePerHalfKg: country.pricePerHalfKg,
+//       deliveryDays: country.days
+//     },
+//     priceExamples: examples
+//   });
+// });
+
+// // ✅ إعادة تحميل الإعدادات (للتطوير فقط)
+// app.post('/reload-config', (req, res) => {
+//   try {
+//     const configPath = path.join(__dirname, 'shipping-config.json');
+//     delete require.cache[require.resolve(configPath)];
+//     const configFile = fs.readFileSync(configPath, 'utf8');
+//     shippingConfig = JSON.parse(configFile);
+    
+//     res.json({
+//       success: true,
+//       message: 'Configuration reloaded successfully',
+//       countries: Object.keys(shippingConfig.countries).length,
+//       services: Object.keys(shippingConfig.serviceTypes).length
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       error: error.message
+//     });
+//   }
+// });
+
+// // ✅ 404 Handler
+// app.use((req, res) => {
+//   res.status(404).json({
+//     error: 'Endpoint not found',
+//     availableEndpoints: [
+//       'GET /',
+//       'GET /health',
+//       'POST /shipping-rates',
+//       'GET /calculate?country=QA&weight=2000&service=standard',
+//       'GET /countries?weight=1000&service=standard',
+//       'GET /services',
+//       'GET /test/:countryCode',
+//       'POST /reload-config'
+//     ]
+//   });
+// });
+
+// // ✅ Error Handler
+// app.use((err, req, res, next) => {
+//   console.error('❌ Error:', err);
+//   res.status(500).json({
+//     error: 'Internal server error',
+//     message: err.message
+//   });
+// });
+
+// // ✅ Start Server
+// const server = app.listen(PORT, '0.0.0.0', () => {
+//   console.log('\n🚀 ====================================');
+//   console.log(`✅ Dynamic Shipping Calculator Running`);
+//   console.log(`📍 Port: ${PORT}`);
+//   console.log(`⏰ Started: ${new Date().toLocaleString()}`);
+//   console.log('====================================');
+//   console.log('\n📊 Configuration:');
+//   console.log(`   🌍 Countries: ${Object.keys(shippingConfig.countries).length}`);
+//   console.log(`   📦 Services: ${Object.keys(shippingConfig.serviceTypes).length}`);
+//   console.log('\n📋 Supported Countries:');
+//   Object.entries(shippingConfig.countries).forEach(([code, country]) => {
+//     console.log(`   ${code}: ${country.name} (${country.nameAr})`);
+//   });
+//   console.log('\n✅ Ready!\n');
+// });
+
+// // Graceful shutdown
+// process.on('SIGTERM', () => {
+//   console.log('🛑 Shutting down gracefully...');
+//   server.close(() => {
+//     console.log('✅ Server closed');
+//     process.exit(0);
+//   });
+// });
+
+// process.on('SIGINT', () => {
+//   console.log('🛑 SIGINT received, closing server...');
+//   server.close(() => {
+//     console.log('✅ Server closed');
+//     process.exit(0);
+//   });
+// });
+
+// module.exports = app;
+//////////////////////////////////////////////////////////////////////////////////
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
@@ -720,16 +1142,16 @@ app.use((req, res, next) => {
   next();
 });
 
-// ✅ قراءة ملف الإعدادات
-let shippingConfig;
+// ✅ قراءة ملف الأسعار الثابتة
+let shippingRates;
 try {
-  const configPath = path.join(__dirname, 'shipping-config.json');
-  const configFile = fs.readFileSync(configPath, 'utf8');
-  shippingConfig = JSON.parse(configFile);
-  console.log('✅ Shipping configuration loaded successfully');
-  console.log(`📊 Loaded ${Object.keys(shippingConfig.countries).length} countries`);
+  const ratesPath = path.join(__dirname, 'shipping-rates.json');
+  const ratesFile = fs.readFileSync(ratesPath, 'utf8');
+  shippingRates = JSON.parse(ratesFile);
+  console.log('✅ Shipping rates loaded successfully');
+  console.log(`📊 Loaded ${Object.keys(shippingRates.rates).length} countries`);
 } catch (error) {
-  console.error('❌ Error loading shipping configuration:', error);
+  console.error('❌ Error loading shipping rates:', error);
   process.exit(1);
 }
 
@@ -739,44 +1161,37 @@ function roundWeight(grams) {
   return Math.ceil(kg * 2) / 2; // تقريب لأعلى 0.5
 }
 
-// ✅ دالة حساب السعر حسب الوزن
-function calculatePrice(countryCode, weightInGrams, serviceType = 'standard') {
-  const country = shippingConfig.countries[countryCode];
-  const service = shippingConfig.serviceTypes[serviceType];
-
-  if (!country || !service) {
+// ✅ دالة البحث عن السعر حسب الوزن
+function getShippingPrice(countryCode, weightInGrams) {
+  const country = shippingRates.rates[countryCode];
+  
+  if (!country) {
     return null;
   }
 
   const weightInKg = roundWeight(weightInGrams);
   
-  // حساب عدد الأنصاف كيلوات الإضافية
-  const extraHalfKgs = Math.max(0, (weightInKg - 0.5) * 2);
+  // إذا كان الوزن أكثر من 10 كجم، نستخدم سعر 10 كجم
+  const lookupWeight = Math.min(weightInKg, 10.0);
   
-  // السعر = السعر الأساسي + (عدد الأنصاف × سعر النصف كيلو)
-  const baseCalculation = country.basePrice + (extraHalfKgs * country.pricePerHalfKg);
+  // البحث عن السعر المطابق
+  const priceKey = lookupWeight.toFixed(1);
+  const price = country.prices[priceKey];
   
-  // تطبيق معامل نوع الخدمة
-  const finalPrice = baseCalculation * service.multiplier;
+  if (price === undefined) {
+    console.error(`⚠️ No price found for ${countryCode} at ${priceKey}kg`);
+    return null;
+  }
 
   return {
     country: country.name,
     countryAr: country.nameAr,
-    serviceType: service.name,
-    serviceTypeAr: service.nameAr,
     weightInKg: weightInKg,
-    basePrice: country.basePrice,
-    pricePerHalfKg: country.pricePerHalfKg,
-    calculatedPrice: Math.round(finalPrice * 100) / 100,
-    priceInCents: Math.round(finalPrice * 100),
+    requestedWeight: lookupWeight,
+    price: price,
+    priceInCents: Math.round(price * 100),
     deliveryDays: country.days,
-    breakdown: {
-      base: country.basePrice,
-      extra: extraHalfKgs * country.pricePerHalfKg,
-      serviceMultiplier: service.multiplier,
-      beforeService: baseCalculation,
-      final: finalPrice
-    }
+    overweight: weightInKg > 10.0
   };
 }
 
@@ -784,17 +1199,16 @@ function calculatePrice(countryCode, weightInGrams, serviceType = 'standard') {
 app.get('/', (req, res) => {
   res.status(200).json({
     status: '✅ النظام يعمل بنجاح',
-    service: 'Shopify Dynamic Shipping Calculator',
-    version: '2.1.0',
+    service: 'Shopify Fixed Shipping Rates',
+    version: '2.0.0',
     features: [
-      'حساب حسب الوزن',
-      'حساب حسب الدولة',
-      '3 أنواع خدمات شحن',
-      'إعدادات منفصلة (JSON)',
-      'سهل التعديل والتخصيص'
+      'أسعار شحن ثابتة حسب الوزن',
+      'أسعار محددة لكل 0.5 كجم',
+      'دعم الأوزان حتى 10 كجم',
+      'سهل التعديل عبر ملف JSON'
     ],
-    supportedCountries: Object.keys(shippingConfig.countries).length,
-    serviceTypes: Object.keys(shippingConfig.serviceTypes),
+    supportedCountries: Object.keys(shippingRates.rates).length,
+    weightRange: '0.5kg - 10.0kg',
     timestamp: new Date().toISOString()
   });
 });
@@ -839,9 +1253,7 @@ app.post('/shipping-rates', (req, res) => {
 
     // ✅ إذا كان الوزن 0، استخدم وزن افتراضي (500g = 0.5kg)
     if (totalWeight === 0) {
-      console.log('⚠️ WARNING: Weight is 0! Shopify might not be sending weight data.');
-      console.log('💡 Using default weight: 500g (0.5kg)');
-      console.log('🔧 Fix: Make sure product weight is filled in Shopify product settings');
+      console.log('⚠️ WARNING: Weight is 0! Using default weight: 500g (0.5kg)');
       totalWeight = 500;
     }
 
@@ -849,59 +1261,35 @@ app.post('/shipping-rates', (req, res) => {
     console.log(`⚖️ Total Weight: ${totalWeight}g (${roundWeight(totalWeight)}kg)`);
 
     // التحقق من دعم الدولة
-    if (!shippingConfig.countries[countryCode]) {
+    if (!shippingRates.rates[countryCode]) {
       console.log(`⚠️ Country not supported: ${countryCode}`);
-      console.log(`📋 Available countries: ${Object.keys(shippingConfig.countries).join(', ')}`);
+      console.log(`📋 Available countries: ${Object.keys(shippingRates.rates).join(', ')}`);
       return res.status(200).json({ rates: [] });
     }
 
-    // ✅ حساب الأسعار لجميع أنواع الخدمات
-    const rates = [];
+    // ✅ البحث عن السعر
+    const shippingCalc = getShippingPrice(countryCode, totalWeight);
     
-    // حالياً نرسل Standard فقط (يمكن إضافة الباقي لاحقاً)
-    const standardCalc = calculatePrice(countryCode, totalWeight, 'standard');
+    if (!shippingCalc) {
+      console.error(`❌ Failed to get price for ${countryCode}`);
+      return res.status(200).json({ rates: [] });
+    }
+
+    console.log(`✅ Found price: ${shippingCalc.price} AED (${shippingCalc.priceInCents} cents)`);
     
-    if (standardCalc) {
-      console.log(`✅ Calculated price: ${standardCalc.calculatedPrice} AED (${standardCalc.priceInCents} cents)`);
-      console.log(`📊 Breakdown:`, standardCalc.breakdown);
-      
-      rates.push({
-        service_name: `Standard Shipping to ${standardCalc.country}`,
-        service_code: `STD_${countryCode}`,
-        total_price: standardCalc.priceInCents.toString(),
-        currency: currency,
-        description: `Delivery in ${standardCalc.deliveryDays} business days (${standardCalc.weightInKg}kg)`
-      });
-    } else {
-      console.error(`❌ Failed to calculate price for ${countryCode}`);
+    if (shippingCalc.overweight) {
+      console.log(`⚠️ Weight exceeds 10kg, using 10kg price`);
     }
 
-    // 💡 لتفعيل Economy و Premium، أزل التعليق عن هذا القسم:
-    /*
-    const economyCalc = calculatePrice(countryCode, totalWeight, 'economy');
-    if (economyCalc) {
-      rates.push({
-        service_name: `Economy Shipping to ${economyCalc.country}`,
-        service_code: `ECO_${countryCode}`,
-        total_price: economyCalc.priceInCents.toString(),
-        currency: currency,
-        description: `Delivery in ${economyCalc.deliveryDays} business days (${economyCalc.weightInKg}kg)`
-      });
-    }
+    const rates = [{
+      service_name: `Standard Shipping to ${shippingCalc.country}`,
+      service_code: `STD_${countryCode}`,
+      total_price: shippingCalc.priceInCents.toString(),
+      currency: currency,
+      description: `Delivery in ${shippingCalc.deliveryDays} business days (${shippingCalc.weightInKg}kg)`
+    }];
 
-    const premiumCalc = calculatePrice(countryCode, totalWeight, 'premium');
-    if (premiumCalc) {
-      rates.push({
-        service_name: `Premium Shipping to ${premiumCalc.country}`,
-        service_code: `PRM_${countryCode}`,
-        total_price: premiumCalc.priceInCents.toString(),
-        currency: currency,
-        description: `Express delivery in ${premiumCalc.deliveryDays} business days (${premiumCalc.weightInKg}kg)`
-      });
-    }
-    */
-
-    console.log(`✅ Calculated ${rates.length} rate(s)`);
+    console.log(`✅ Response prepared`);
     console.log('📤 Response:', JSON.stringify({ rates }, null, 2));
     console.log('==============================\n');
 
@@ -918,36 +1306,34 @@ app.post('/shipping-rates', (req, res) => {
 
 // ✅ اختبار حساب السعر
 app.get('/calculate', (req, res) => {
-  const { country, weight, service } = req.query;
+  const { country, weight } = req.query;
 
   if (!country || !weight) {
     return res.status(400).json({
       error: 'Missing parameters',
       required: 'country (code) and weight (in grams)',
-      example: '/calculate?country=QA&weight=2500&service=standard'
+      example: '/calculate?country=JO&weight=2500'
     });
   }
 
-  const result = calculatePrice(
+  const result = getShippingPrice(
     country.toUpperCase(),
-    parseInt(weight),
-    service || 'standard'
+    parseInt(weight)
   );
 
   if (!result) {
     return res.status(404).json({
-      error: 'Country not found or invalid service type',
-      availableCountries: Object.keys(shippingConfig.countries),
-      availableServices: Object.keys(shippingConfig.serviceTypes)
+      error: 'Country not found or invalid weight',
+      availableCountries: Object.keys(shippingRates.rates)
     });
   }
 
   res.json({
     calculation: result,
-    formattedPrice: `${result.calculatedPrice.toFixed(2)} AED`,
+    formattedPrice: `${result.price.toFixed(2)} AED`,
     shopifyFormat: {
-      service_name: `${result.serviceType} to ${result.country}`,
-      service_code: `${shippingConfig.serviceTypes[service || 'standard'].code}_${country.toUpperCase()}`,
+      service_name: `Standard Shipping to ${result.country}`,
+      service_code: `STD_${country.toUpperCase()}`,
       total_price: result.priceInCents.toString(),
       currency: 'AED'
     }
@@ -956,71 +1342,81 @@ app.get('/calculate', (req, res) => {
 
 // ✅ عرض جميع الدول والأسعار
 app.get('/countries', (req, res) => {
-  const weight = parseInt(req.query.weight) || 500; // وزن افتراضي 0.5 كجم
-  const service = req.query.service || 'standard';
+  const weight = parseInt(req.query.weight) || 500;
 
-  const countriesWithPrices = Object.entries(shippingConfig.countries).map(([code, country]) => {
-    const calc = calculatePrice(code, weight, service);
+  const countriesWithPrices = Object.entries(shippingRates.rates).map(([code, country]) => {
+    const calc = getShippingPrice(code, weight);
     return {
       code,
       name: country.name,
       nameAr: country.nameAr,
-      basePrice: country.basePrice,
-      pricePerHalfKg: country.pricePerHalfKg,
       deliveryDays: country.days,
-      examplePrice: calc ? `${calc.calculatedPrice.toFixed(2)} AED` : 'N/A'
+      availableWeights: Object.keys(country.prices).map(w => `${w}kg`),
+      examplePrice: calc ? `${calc.price.toFixed(2)} AED` : 'N/A'
     };
   });
 
   res.json({
     totalCountries: countriesWithPrices.length,
     exampleWeight: `${weight}g (${roundWeight(weight)}kg)`,
-    serviceType: service,
     countries: countriesWithPrices
   });
 });
 
-// ✅ عرض أنواع الخدمات
-app.get('/services', (req, res) => {
+// ✅ عرض جدول الأسعار لدولة معينة
+app.get('/rates/:countryCode', (req, res) => {
+  const countryCode = req.params.countryCode.toUpperCase();
+  const country = shippingRates.rates[countryCode];
+
+  if (!country) {
+    return res.status(404).json({
+      error: 'Country not found',
+      availableCountries: Object.keys(shippingRates.rates)
+    });
+  }
+
+  // تحويل الأسعار إلى مصفوفة منظمة
+  const priceTable = Object.entries(country.prices).map(([weight, price]) => ({
+    weight: `${weight} kg`,
+    price: `${price.toFixed(2)} AED`,
+    priceInCents: Math.round(price * 100)
+  }));
+
   res.json({
-    services: Object.entries(shippingConfig.serviceTypes).map(([key, service]) => ({
-      key,
-      name: service.name,
-      nameAr: service.nameAr,
-      multiplier: service.multiplier,
-      description: `${service.multiplier === 1 ? 'Base price' : 
-                    service.multiplier < 1 ? `${(1 - service.multiplier) * 100}% discount` :
-                    `${(service.multiplier - 1) * 100}% premium`}`
-    }))
+    country: {
+      code: countryCode,
+      name: country.name,
+      nameAr: country.nameAr,
+      deliveryDays: country.days
+    },
+    priceTable: priceTable
   });
 });
 
 // ✅ اختبار شامل لدولة معينة
 app.get('/test/:countryCode', (req, res) => {
   const countryCode = req.params.countryCode.toUpperCase();
-  const country = shippingConfig.countries[countryCode];
+  const country = shippingRates.rates[countryCode];
 
   if (!country) {
     return res.status(404).json({
       error: 'Country not found',
-      availableCountries: Object.keys(shippingConfig.countries)
+      availableCountries: Object.keys(shippingRates.rates)
     });
   }
 
-  // حساب أمثلة لأوزان مختلفة
-  const weightExamples = [500, 1000, 1500, 2000, 2500, 3000, 5000];
-  const examples = {};
-
-  Object.keys(shippingConfig.serviceTypes).forEach(serviceType => {
-    examples[serviceType] = weightExamples.map(weight => {
-      const calc = calculatePrice(countryCode, weight, serviceType);
-      return {
-        weight: `${weight}g`,
-        roundedWeight: `${calc.weightInKg}kg`,
-        price: `${calc.calculatedPrice.toFixed(2)} AED`,
-        priceInCents: calc.priceInCents
-      };
-    });
+  // اختبار أوزان مختلفة
+  const weightExamples = [500, 1000, 1500, 2000, 2500, 3000, 5000, 7500, 10000, 12000];
+  const examples = weightExamples.map(weight => {
+    const calc = getShippingPrice(countryCode, weight);
+    return {
+      inputWeight: `${weight}g`,
+      roundedWeight: `${calc.weightInKg}kg`,
+      usedWeight: `${calc.requestedWeight}kg`,
+      price: `${calc.price.toFixed(2)} AED`,
+      priceInCents: calc.priceInCents,
+      overweight: calc.overweight
+    };
   });
 
   res.json({
@@ -1028,27 +1424,25 @@ app.get('/test/:countryCode', (req, res) => {
       code: countryCode,
       name: country.name,
       nameAr: country.nameAr,
-      basePrice: country.basePrice,
-      pricePerHalfKg: country.pricePerHalfKg,
       deliveryDays: country.days
     },
-    priceExamples: examples
+    priceExamples: examples,
+    note: 'Weights over 10kg will use the 10kg price'
   });
 });
 
-// ✅ إعادة تحميل الإعدادات (للتطوير فقط)
-app.post('/reload-config', (req, res) => {
+// ✅ إعادة تحميل الأسعار (للتطوير فقط)
+app.post('/reload-rates', (req, res) => {
   try {
-    const configPath = path.join(__dirname, 'shipping-config.json');
-    delete require.cache[require.resolve(configPath)];
-    const configFile = fs.readFileSync(configPath, 'utf8');
-    shippingConfig = JSON.parse(configFile);
+    const ratesPath = path.join(__dirname, 'shipping-rates.json');
+    delete require.cache[require.resolve(ratesPath)];
+    const ratesFile = fs.readFileSync(ratesPath, 'utf8');
+    shippingRates = JSON.parse(ratesFile);
     
     res.json({
       success: true,
-      message: 'Configuration reloaded successfully',
-      countries: Object.keys(shippingConfig.countries).length,
-      services: Object.keys(shippingConfig.serviceTypes).length
+      message: 'Rates reloaded successfully',
+      countries: Object.keys(shippingRates.rates).length
     });
   } catch (error) {
     res.status(500).json({
@@ -1066,11 +1460,11 @@ app.use((req, res) => {
       'GET /',
       'GET /health',
       'POST /shipping-rates',
-      'GET /calculate?country=QA&weight=2000&service=standard',
-      'GET /countries?weight=1000&service=standard',
-      'GET /services',
+      'GET /calculate?country=JO&weight=2000',
+      'GET /countries?weight=1000',
+      'GET /rates/:countryCode',
       'GET /test/:countryCode',
-      'POST /reload-config'
+      'POST /reload-rates'
     ]
   });
 });
@@ -1087,15 +1481,15 @@ app.use((err, req, res, next) => {
 // ✅ Start Server
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log('\n🚀 ====================================');
-  console.log(`✅ Dynamic Shipping Calculator Running`);
+  console.log(`✅ Fixed Shipping Rates Calculator Running`);
   console.log(`📍 Port: ${PORT}`);
   console.log(`⏰ Started: ${new Date().toLocaleString()}`);
   console.log('====================================');
   console.log('\n📊 Configuration:');
-  console.log(`   🌍 Countries: ${Object.keys(shippingConfig.countries).length}`);
-  console.log(`   📦 Services: ${Object.keys(shippingConfig.serviceTypes).length}`);
+  console.log(`   🌍 Countries: ${Object.keys(shippingRates.rates).length}`);
+  console.log(`   ⚖️ Weight Range: 0.5kg - 10.0kg`);
   console.log('\n📋 Supported Countries:');
-  Object.entries(shippingConfig.countries).forEach(([code, country]) => {
+  Object.entries(shippingRates.rates).forEach(([code, country]) => {
     console.log(`   ${code}: ${country.name} (${country.nameAr})`);
   });
   console.log('\n✅ Ready!\n');
